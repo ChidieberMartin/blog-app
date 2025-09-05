@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAllBlogs } from "../../utils/blogApi";
 import { Link } from "react-router-dom";
-import BlogCard from "../../components/BlogCard/BlogCard"; // Import the BlogCard component
+import BlogCard from "../../components/BlogCard/BlogCard"; 
 
 const BlogList = () => {
   const [blogs, setBlogs] = useState([]);
