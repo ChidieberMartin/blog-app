@@ -6,6 +6,7 @@ const {
   getById,
   getByUserId,
   updateBlog,
+  getAllBlogsSimple
 } = require("../controller/blog-controller");
 
 // Import middleware
@@ -27,6 +28,7 @@ blogRouter.use(requestLogger);
 // ✅ Public blog routes (no authentication required)
 // Get all blogs - supports pagination and filtering
 blogRouter.get("/", getAllBlogs);
+blogRouter.get("/simple-blog", getAllBlogsSimple);
 
 // Get specific blog by ID
 blogRouter.get("/:id", validateObjectId, getById);
@@ -37,7 +39,7 @@ blogRouter.get("/user/:id", validateObjectId, getByUserId);
 // ✅ Protected blog routes (authentication required)
 
 // Create new blog (requires authentication and email verification)
-blogRouter.post("/", 
+blogRouter.post("/create", 
     rateLimit(20, 60 * 60 * 1000), // Rate limit: 20 blog posts per hour
     verifyToken, 
     requireEmailVerification, // Optional: require email verification to post

@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
-const { encrypt, decrypt } = require('../utils/encrypt'); // Fixed: typo "enrypt" -> "bcrypt"
+const {
+    encrypt,
+    decrypt
+} = require('../utils/encrypt'); // Fixed: typo "enrypt" -> "bcrypt"
 
 const UsersSchema = new mongoose.Schema({
     name: {
@@ -18,19 +21,31 @@ const UsersSchema = new mongoose.Schema({
         required: true,
         minlength: 8
     },
+    emailVerificationToken: {
+        type: String,
+        default: undefined
+    },
+    emailVerificationExpiry: {
+        type: Date,
+        default: undefined
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
     resetPasswordToken: { // Fixed: "restPasswordToken" -> "resetPasswordToken" 
-        type: String 
+        type: String
     },
     resetPasswordExpires: { // Fixed: "restPasswordExpires" -> "resetPasswordExpires"
-        type: Date 
+        type: Date
     },
     blogs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Blog', // Fixed: Should reference 'Blog' model, not 'Users'
         required: false // Fixed: blogs are optional when user is created
     }]
-}, { 
-    timestamps: true 
+}, {
+    timestamps: true
 });
 
 // Pre-save middleware to hash password
@@ -88,7 +103,7 @@ UsersSchema.methods.getResetPasswordToken = function () { // Fixed: method name 
 };
 
 // Static method to find user by reset token
-UsersSchema.statics.findByResetToken = function(token) {
+UsersSchema.statics.findByResetToken = function (token) {
     const hashedToken = crypto
         .createHash("sha256")
         .update(token)
@@ -96,12 +111,14 @@ UsersSchema.statics.findByResetToken = function(token) {
 
     return this.findOne({
         resetPasswordToken: hashedToken,
-        resetPasswordExpires: { $gt: Date.now() }
+        resetPasswordExpires: {
+            $gt: Date.now()
+        }
     });
 };
 
 // Virtual for user's full profile (excluding password)
-UsersSchema.methods.toJSON = function() {
+UsersSchema.methods.toJSON = function () {
     const user = this.toObject();
     delete user.password;
     delete user.resetPasswordToken;
@@ -109,7 +126,7 @@ UsersSchema.methods.toJSON = function() {
     return user;
 };
 
-const UserModel = mongoose.model('User', UsersSchema); 
+const UserModel = mongoose.model('User', UsersSchema);
 
 module.exports = UserModel;
 
