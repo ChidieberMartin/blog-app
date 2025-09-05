@@ -3,7 +3,7 @@ import {Routes, Route } from "react-router-dom";
 import { AuthProvider } from './AuthContext/AuthContext';
 import Login from './pages/Login/Login';
 import Signup from './pages/Signup/Signup';
-import BlogList from "./components/BlogList/BlogList";
+import BlogList from "./pages/BlogList/BlogList";
 import BlogDetails from "./components/BlogDetails/BlogDetails";
 import BlogCard from "./components/BlogCard/BlogCard";
 import Layout from './components/Layout/Layout'; // import layout
