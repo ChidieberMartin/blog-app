@@ -10,6 +10,7 @@ import Homepage from './pages/Homepage/Homepage';
 import CreateBlog from './pages/CreateBlog/CreateBlog';
 import VerifyEmail from './components/VerifyEmail/VerifyEmail';
 import PrivateRoute from './components/PrivateRoute/PrivateRoute';
+import NotFoundpage from './pages/NotFound/NotFoundpage';
 
 const App = () => {
   const token = localStorage.getItem("token");
@@ -52,7 +53,7 @@ const App = () => {
         </Route>
 
         {/* Catch-all route */}
-        <Route path="*" element={<div>404 Not Found</div>} />
+        <Route path="*" element={<NotFoundpage/>} />
       </Routes>
     </AuthProvider>
   );

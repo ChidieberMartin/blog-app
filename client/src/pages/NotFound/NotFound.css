@@ -1,0 +1,131 @@
+/* NotFound.css */
+
+/* Main container styling */
+.notfound-container {
+  position: relative;
+}
+
+/* 404 Number styling */
+.notfound-number {
+  font-size: 8rem !important;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Icon container styling */
+.notfound-icon {
+  width: 100px;
+  height: 100px;
+}
+
+/* Step circles styling */
+.notfound-step {
+  width: 32px;
+  height: 32px;
+}
+
+/* Suggestions card hover effect */
+.notfound-suggestions {
+  transition: all 0.3s ease;
+}
+
+.notfound-suggestions:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Button hover effects */
+.notfound-btn {
+  transition: all 0.3s ease;
+}
+
+.notfound-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Background decoration */
+.notfound-bg {
+  z-index: -1;
+}
+
+.notfound-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.notfound-circle-1 {
+  top: 10%;
+  right: 10%;
+  width: 200px;
+  height: 200px;
+  opacity: 0.05;
+}
+
+.notfound-circle-2 {
+  bottom: 10%;
+  left: 10%;
+  width: 150px;
+  height: 150px;
+  opacity: 0.05;
+}
+
+.notfound-circle-3 {
+  top: 50%;
+  left: 5%;
+  width: 100px;
+  height: 100px;
+  opacity: 0.03;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .notfound-number {
+    font-size: 6rem !important;
+  }
+  
+  .notfound-icon {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .notfound-circle-1 {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .notfound-circle-2 {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .notfound-circle-3 {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (max-width: 576px) {
+  .notfound-number {
+    font-size: 4rem !important;
+  }
+  
+  .notfound-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .notfound-step {
+    width: 28px;
+    height: 28px;
+  }
+}
