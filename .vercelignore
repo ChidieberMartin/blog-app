@@ -1,0 +1,23 @@
+# Exclude backend files and folders
+nodejs-api/
+server/
+api-server/
+node_modules/
+
+# Exclude development files
+*.log
+.env.local
+.env.development
+.env.test
+
+# Exclude documentation
+docs/
+README-backend.md
+
+# Exclude database files
+*.db
+*.sqlite
+
+# Exclude other unnecessary files
+.git/
+.github/
