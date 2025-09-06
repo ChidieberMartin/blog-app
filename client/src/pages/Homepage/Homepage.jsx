@@ -1,592 +1,377 @@
-import React, { useState, useEffect,useCallback } from 'react';
-import { Search, BookOpen, TrendingUp, Users, Star, ArrowRight, Filter, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { BookOpen, Users, Globe, TrendingUp, Star, ArrowRight, CheckCircle, Edit3, Share2, BarChart3 } from 'lucide-react';
+import Navbar from '../../components/Navbar/Navbar';
 
-// Mock components and context for demo
-const useAuth = () => ({ user: { name: 'John Doe', email: 'john@example.com' } });
-
-const blogAPI = {
-  getAllBlogs: async (page = 1, limit = 9, search = '') => {
-    // Mock API response
-    const mockBlogs = [
-      {
-        _id: '1',
-        title: 'Getting Started with React Hooks',
-        content: 'React Hooks have revolutionized how we write React components...',
-        author: { name: 'Alice Johnson', email: 'alice@example.com' },
-        createdAt: '2024-08-25T10:00:00Z',
-        tags: ['React', 'JavaScript', 'Frontend'],
-        likes: 42
-      },
-      {
-        _id: '2',
-        title: 'The Future of Web Development',
-        content: 'As we look ahead to the next decade of web development...',
-        author: { name: 'Bob Smith', email: 'bob@example.com' },
-        createdAt: '2024-08-24T15:30:00Z',
-        tags: ['Web Development', 'Technology', 'Future'],
-        likes: 28
-      },
-      {
-        _id: '3',
-        title: 'Building Scalable APIs with Node.js',
-        content: 'Creating robust and scalable APIs is crucial for modern applications...',
-        author: { name: 'Carol Davis', email: 'carol@example.com' },
-        createdAt: '2024-08-23T09:15:00Z',
-        tags: ['Node.js', 'Backend', 'API'],
-        likes: 35
-      },
-      {
-        _id: '4',
-        title: 'CSS Grid vs Flexbox: When to Use What',
-        content: 'Understanding the differences between CSS Grid and Flexbox...',
-        author: { name: 'David Wilson', email: 'david@example.com' },
-        createdAt: '2024-08-22T14:20:00Z',
-        tags: ['CSS', 'Layout', 'Frontend'],
-        likes: 51
-      },
-      {
-        _id: '5',
-        title: 'Machine Learning for Beginners',
-        content: 'Dive into the fascinating world of machine learning...',
-        author: { name: 'Eva Martinez', email: 'eva@example.com' },
-        createdAt: '2024-08-21T11:45:00Z',
-        tags: ['Machine Learning', 'AI', 'Python'],
-        likes: 67
-      },
-      {
-        _id: '6',
-        title: 'The Art of Clean Code',
-        content: 'Writing clean, maintainable code is more art than science...',
-        author: { name: 'Frank Brown', email: 'frank@example.com' },
-        createdAt: '2024-08-20T16:00:00Z',
-        tags: ['Programming', 'Best Practices', 'Clean Code'],
-        likes: 39
-      }
-    ];
-
-    // Filter by search term if provided
-    let filteredBlogs = search
-      ? mockBlogs.filter(blog =>
-        blog.title.toLowerCase().includes(search.toLowerCase()) ||
-        blog.content.toLowerCase().includes(search.toLowerCase()) ||
-        blog.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()))
-      )
-      : mockBlogs;
-
-    return {
-      blogs: filteredBlogs.slice((page - 1) * limit, page * limit),
-      pagination: {
-        totalPages: Math.ceil(filteredBlogs.length / limit),
-        currentPage: page,
-        totalBlogs: filteredBlogs.length
-      }
-    };
-  },
-  deleteBlog: async (id) => {
-    // Mock delete
-    return { success: true };
-  }
-};
-
-const BlogCard = ({ blog, onView, onEdit, onDelete, featured = false }) => {
-  const { user } = useAuth();
-  const isOwner = user && blog.author.email === user.email;
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  return (
-    <div className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden ${featured ? 'border-2 border-yellow-200' : ''}`}>
-      {featured && (
-        <div className="bg-yellow-50 px-4 py-2 border-b">
-          <div className="flex items-center text-sm text-yellow-700">
-            <Star className="w-4 h-4 mr-1 fill-current" />
-            Featured
-          </div>
-        </div>
-      )}
-
-      <div className="p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-          {blog.title}
-        </h3>
-
-        <p className="text-gray-600 mb-4 line-clamp-3">
-          {blog.content}
-        </p>
-
-        <div className="d-flex flex-wrap gap-2 mb-4">
-          {blog.tags.slice(0, 3).map((tag, index) => (
-            <span
-              key={index}
-              className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
-            >
-              {tag}
-            </span>
-          ))}
-          {blog.tags.length > 3 && (
-            <span className="text-xs text-gray-500">+{blog.tags.length - 3} more</span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-2">
-              {blog.author.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">{blog.author.name}</p>
-              <p>{formatDate(blog.createdAt)}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <Star className="w-4 h-4 mr-1" />
-            <span>{blog.likes}</span>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => onView(blog)}
-            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            Read More
-          </button>
-
-          {isOwner && (
-            <>
-              <button
-                onClick={() => onEdit(blog)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete(blog)}
-                className="px-4 py-2 border border-red-300 text-red-700 rounded-md hover:bg-red-50 transition-colors text-sm"
-              >
-                Delete
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Home = ({ setCurrentPage, setSelectedBlog }) => {
-  const { user } = useAuth();
-  const [blogs, setBlogs] = useState([]);
-  const [featuredBlogs, setFeaturedBlogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPageNum] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [sortBy, setSortBy] = useState('newest');
-  const [showFilters, setShowFilters] = useState(false);
-
-
-   const loadBlogs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await blogAPI.getAllBlogs(currentPage, 9, searchTerm);
-
-      if (data.blogs) {
-        setBlogs(data.blogs);
-        setTotalPages(data.pagination?.totalPages || 1);
-      }
-    } catch (error) {
-      console.error('Failed to load blogs:', error);
-    } finally {
-      setLoading(false);
+const Homepage = () => {
+  const features = [
+    {
+      icon: Edit3,
+      title: "Rich Text Editor",
+      description: "Write and format your blogs with our powerful, intuitive editor with real-time preview."
+    },
+    {
+      icon: Share2,
+      title: "Easy Sharing",
+      description: "Share your content across social platforms and reach a wider audience effortlessly."
+    },
+    {
+      icon: BarChart3,
+      title: "Analytics Dashboard",
+      description: "Track your blog performance with detailed analytics and engagement metrics."
+    },
+    {
+      icon: Users,
+      title: "Community Driven",
+      description: "Connect with fellow writers and readers in our vibrant blogging community."
+    },
+    {
+      icon: Globe,
+      title: "Global Reach",
+      description: "Publish to the world and build your audience across different countries and cultures."
+    },
+    {
+      icon: TrendingUp,
+      title: "SEO Optimized",
+      description: "Built-in SEO tools to help your content rank higher and reach more readers."
     }
-  }, [currentPage, searchTerm]); // 👈 dependencies
-
-  const loadFeaturedBlogs = useCallback(async () => {
-    try {
-      const data = await blogAPI.getAllBlogs(1, 3);
-      if (data.blogs) {
-        setFeaturedBlogs(data.blogs.slice(0, 3));
-      }
-    } catch (error) {
-      console.error('Failed to load featured blogs:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadBlogs();
-    loadFeaturedBlogs();
-  }, [loadBlogs, loadFeaturedBlogs]);;
-
-  // const loadBlogs = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const data = await blogAPI.getAllBlogs(currentPage, 9, searchTerm);
-
-  //     if (data.blogs) {
-  //       setBlogs(data.blogs);
-  //       setTotalPages(data.pagination?.totalPages || 1);
-  //     }
-  //   } catch (error) {
-  //     console.error('Failed to load blogs:', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const loadFeaturedBlogs = async () => {
-  //   try {
-  //     // Get recent blogs as featured (you could modify this logic)
-  //     const data = await blogAPI.getAllBlogs(1, 3);
-  //     if (data.blogs) {
-  //       setFeaturedBlogs(data.blogs.slice(0, 3));
-  //     }
-  //   } catch (error) {
-  //     console.error('Failed to load featured blogs:', error);
-  //   }
-  // };
-
-  const handleSearch = async () => {
-    setCurrentPageNum(1);
-    await loadBlogs();
-  };
-
-  const handleView = (blog) => {
-    setSelectedBlog(blog);
-    setCurrentPage('viewBlog');
-  };
-
-  const handleEdit = (blog) => {
-    setCurrentPage('editBlog');
-    // You'll need to pass the blog data to the edit component
-  };
-
-  const handleDelete = async (blog) => {
-    if (!window.confirm('Are you sure you want to delete this blog?')) {
-      return;
-    }
-
-    try {
-      await blogAPI.deleteBlog(blog._id);
-      await loadBlogs(); // Refresh the list
-    } catch (error) {
-      console.error('Failed to delete blog:', error);
-      alert('Failed to delete blog');
-    }
-  };
-
-  const sortOptions = [
-    { value: 'newest', label: 'Newest First' },
-    { value: 'oldest', label: 'Oldest First' },
-    { value: 'title', label: 'Title A-Z' }
   ];
 
-  const getSortedBlogs = () => {
-    let sortedBlogs = [...blogs];
-
-    switch (sortBy) {
-      case 'oldest':
-        return sortedBlogs.reverse();
-      case 'title':
-        return sortedBlogs.sort((a, b) => a.title.localeCompare(b.title));
-      default:
-        return sortedBlogs;
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Travel Blogger",
+      content: "BlogSpace has transformed how I share my travel experiences. The editor is incredibly user-friendly!",
+      rating: 5
+    },
+    {
+      name: "Michael Chen",
+      role: "Tech Writer",
+      content: "The analytics features help me understand my audience better. My readership has grown 300%!",
+      rating: 5
+    },
+    {
+      name: "Emma Davis",
+      role: "Food Blogger",
+      content: "Finally, a platform that makes blogging enjoyable. The community here is amazing and supportive.",
+      rating: 5
     }
-  };
+  ];
 
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPageNum(newPage);
-    }
-  };
+  const stats = [
+    { number: "10K+", label: "Active Bloggers" },
+    { number: "50K+", label: "Published Blogs" },
+    { number: "1M+", label: "Monthly Readers" },
+    { number: "25+", label: "Countries" }
+  ];
 
   return (
-   <div className="min-vh-100 bg-light">
-  {/* Hero Section */}
-  <section className="bg-primary text-white py-5 text-center">
-    <div className="container">
-      <h1 className="display-4 fw-bold mb-3">Welcome to BlogSpace</h1>
-      <p className="lead mb-4">
-        Discover amazing stories, share your thoughts, and connect with writers from around the world.
-      </p>
-
-      {!user ? (
-        <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-          <button
-            onClick={() => setCurrentPage("signup")}
-            className="btn btn-light text-primary fw-semibold px-4 py-2 shadow"
-          >
-            Get Started
-          </button>
-          <button
-            onClick={() => setCurrentPage("allBlogs")}
-            className="btn btn-outline-light fw-semibold px-4 py-2"
-          >
-            Explore Blogs
-          </button>
-        </div>
-      ) : (
-        <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-          <button
-            onClick={() => setCurrentPage("createBlog")}
-            className="btn btn-light text-primary fw-semibold px-4 py-2 d-flex align-items-center shadow"
-          >
-            <BookOpen className="me-2" />
-            Write a Blog
-          </button>
-          <button
-            onClick={() => setCurrentPage("myBlogs")}
-            className="btn btn-outline-light fw-semibold px-4 py-2 d-flex align-items-center"
-          >
-            <Users className="me-2" />
-            My Blogs
-          </button>
-        </div>
-      )}
-    </div>
-  </section>
-
-  {/* Search and Filter Section */}
-  <section className="container py-5">
-    <div className="card shadow-sm">
-      <div className="card-body">
-        <div className="row g-3">
-          <div className="col-md">
-            <div className="input-group">
-              <span className="input-group-text">
-                <Search className="text-secondary" />
-              </span>
-              <input
-                type="text"
-                placeholder="Search for blogs, topics, or authors..."
-                className="form-control"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="col-md-auto d-flex gap-2">
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className="btn btn-outline-secondary d-flex align-items-center"
-            >
-              <Filter className="me-2" /> Filters
-            </button>
-            <button
-              type="button"
-              onClick={handleSearch}
-              className="btn btn-primary"
-            >
-              Search
-            </button>
-          </div>
-        </div>
-
-        {showFilters && (
-          <div className="mt-4 border-top pt-3">
-            <div className="row g-3">
-              <div className="col-md-4">
-                <label className="form-label">Sort By</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="form-select"
+    <div>
+      <Navbar/>
+      
+      {/* Hero Section */}
+      <section className="bg-gradient-primary text-white py-5" style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        minHeight: '80vh',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        <div className="container">
+          <div className="row align-items-center">
+            <div className="col-lg-6">
+              <h1 className="display-3 fw-bold mb-4">
+                Share Your Stories with the World
+              </h1>
+              <p className="lead mb-4 fs-4">
+                BlogSpace is the perfect platform for writers, creators, and storytellers. 
+                Create beautiful blogs, connect with readers, and grow your audience.
+              </p>
+              <div className="d-flex flex-wrap gap-3">
+                <button 
+                  className="btn btn-light btn-lg px-4 py-2 d-flex align-items-center"
+                  onClick={() => window.location.href = '/signup'}
                 >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                  Get Started Free <ArrowRight className="ms-2" size={20} />
+                </button>
+                <button 
+                  className="btn btn-outline-light btn-lg px-4 py-2"
+                  onClick={() => window.location.href = '#features'}
+                >
+                  Learn More
+                </button>
+              </div>
+              <div className="mt-4 d-flex align-items-center">
+                <div className="d-flex me-3">
+                  {[1,2,3,4,5].map(star => (
+                    <Star key={star} className="text-warning" size={20} fill="currentColor" />
                   ))}
-                </select>
+                </div>
+                <span className="small">Trusted by 10,000+ bloggers worldwide</span>
+              </div>
+            </div>
+            <div className="col-lg-6">
+              <div className="position-relative">
+                <div className="bg-white rounded-4 shadow-lg p-4 mb-4">
+                  <div className="d-flex align-items-center mb-3">
+                    <div className="bg-primary rounded-circle p-2 me-3">
+                      <BookOpen className="text-white" size={24} />
+                    </div>
+                    <div>
+                      <h5 className="mb-1 text-dark">My Latest Blog Post</h5>
+                      <p className="text-muted small mb-0">Published 2 hours ago</p>
+                    </div>
+                  </div>
+                  <h6 className="text-dark mb-2">10 Tips for Better Content Writing</h6>
+                  <p className="text-muted small mb-3">Discover the secrets to creating engaging content that keeps your readers coming back for more...</p>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div className="d-flex align-items-center">
+                      <span className="badge bg-primary me-2">Writing Tips</span>
+                      <span className="text-muted small">5 min read</span>
+                    </div>
+                    <div className="d-flex align-items-center text-muted small">
+                      <Users size={16} className="me-1" />
+                      1.2k views
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </div>
-  </section>
+        </div>
+      </section>
 
-  {/* Featured Blogs Section */}
-  {featuredBlogs.length > 0 && (
-    <section className="container py-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="h4 fw-bold text-dark d-flex align-items-center">
-          <Star className="me-2 text-warning" />
-          Featured Blogs
-        </h2>
-        <button
-          onClick={() => setCurrentPage("allBlogs")}
-          className="btn btn-link text-primary fw-semibold"
-        >
-          View all blogs <ArrowRight className="ms-1" />
-        </button>
-      </div>
-
-      <div className="row g-4">
-        {featuredBlogs.map((blog) => (
-          <div className="col-md-6 col-lg-4" key={blog._id}>
-            <BlogCard
-              blog={blog}
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              featured={true}
-            />
+      {/* Stats Section */}
+      <section className="py-4 bg-light">
+        <div className="container">
+          <div className="row text-center">
+            {stats.map((stat, index) => (
+              <div key={index} className="col-6 col-md-3 mb-3 mb-md-0">
+                <h3 className="fw-bold text-primary mb-1">{stat.number}</h3>
+                <p className="text-muted mb-0">{stat.label}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </section>
-  )}
+        </div>
+      </section>
 
-  {/* Recent Blogs Section */}
-  <section className="container py-5">
-    <div className="d-flex justify-content-between align-items-center mb-4">
-      <h2 className="h4 fw-bold text-dark d-flex align-items-center">
-        <TrendingUp className="me-2 text-success" />
-        Recent Blogs
-      </h2>
-      <div className="text-muted small">
-        Showing {blogs.length} of {totalPages * 9} blogs
-      </div>
-    </div>
-
-    {loading ? (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary mb-3"></div>
-        <p className="text-muted">Loading blogs...</p>
-      </div>
-    ) : blogs.length === 0 ? (
-      <div className="text-center py-5">
-        <BookOpen className="mb-3 text-secondary" size={48} />
-        <h5>No blogs found</h5>
-        <p className="text-muted">
-          {searchTerm ? `No blogs match "${searchTerm}"` : "Be the first to write a blog!"}
-        </p>
-        {user && (
-          <button
-            onClick={() => setCurrentPage("createBlog")}
-            className="btn btn-primary d-inline-flex align-items-center"
-          >
-            <BookOpen className="me-2" />
-            Create Your First Blog
-          </button>
-        )}
-      </div>
-    ) : (
-      <>
-        <div className="row g-4">
-          {getSortedBlogs().map((blog) => (
-            <div className="col-md-6 col-lg-4" key={blog._id}>
-              <BlogCard
-                blog={blog}
-                onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
+      {/* Features Section */}
+      <section id="features" className="py-5">
+        <div className="container">
+          <div className="row mb-5">
+            <div className="col-lg-6 mx-auto text-center">
+              <h2 className="display-5 fw-bold mb-3">Everything You Need to Blog</h2>
+              <p className="lead text-muted">
+                Powerful tools and features designed to help you create, share, and grow your blog
+              </p>
             </div>
-          ))}
+          </div>
+          
+          <div className="row g-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div key={index} className="col-md-6 col-lg-4">
+                  <div className="card border-0 shadow-sm h-100 hover-card">
+                    <div className="card-body p-4 text-center">
+                      <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                           style={{width: '60px', height: '60px'}}>
+                        <Icon className="text-primary" size={28} />
+                      </div>
+                      <h5 className="card-title mb-3">{feature.title}</h5>
+                      <p className="card-text text-muted">{feature.description}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
+      </section>
 
-        {totalPages > 1 && (
-          <nav className="mt-4">
-            <ul className="pagination justify-content-center">
-              <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(currentPage - 1)}
+      {/* How It Works Section */}
+      <section className="py-5 bg-light">
+        <div className="container">
+          <div className="row mb-5">
+            <div className="col-lg-6 mx-auto text-center">
+              <h2 className="display-5 fw-bold mb-3">Start Blogging in 3 Simple Steps</h2>
+            </div>
+          </div>
+          
+          <div className="row g-4">
+            <div className="col-md-4 text-center">
+              <div className="position-relative mb-4">
+                <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold" 
+                     style={{width: '60px', height: '60px', fontSize: '24px'}}>
+                  1
+                </div>
+              </div>
+              <h5 className="fw-bold mb-3">Sign Up Free</h5>
+              <p className="text-muted">Create your account in seconds and join our community of writers</p>
+            </div>
+            
+            <div className="col-md-4 text-center">
+              <div className="position-relative mb-4">
+                <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold" 
+                     style={{width: '60px', height: '60px', fontSize: '24px'}}>
+                  2
+                </div>
+              </div>
+              <h5 className="fw-bold mb-3">Write & Publish</h5>
+              <p className="text-muted">Use our powerful editor to create beautiful, engaging blog posts</p>
+            </div>
+            
+            <div className="col-md-4 text-center">
+              <div className="position-relative mb-4">
+                <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold" 
+                     style={{width: '60px', height: '60px', fontSize: '24px'}}>
+                  3
+                </div>
+              </div>
+              <h5 className="fw-bold mb-3">Grow Your Audience</h5>
+              <p className="text-muted">Share your content and connect with readers from around the world</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-5">
+        <div className="container">
+          <div className="row mb-5">
+            <div className="col-lg-6 mx-auto text-center">
+              <h2 className="display-5 fw-bold mb-3">What Our Bloggers Say</h2>
+              <p className="lead text-muted">Join thousands of satisfied bloggers who love BlogSpace</p>
+            </div>
+          </div>
+          
+          <div className="row g-4">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="col-lg-4">
+                <div className="card border-0 shadow-sm h-100">
+                  <div className="card-body p-4">
+                    <div className="d-flex mb-3">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="text-warning me-1" size={16} fill="currentColor" />
+                      ))}
+                    </div>
+                    <p className="card-text mb-4">"{testimonial.content}"</p>
+                    <div className="d-flex align-items-center">
+                      <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                           style={{width: '40px', height: '40px'}}>
+                        <span className="text-white fw-bold">{testimonial.name.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <h6 className="mb-0">{testimonial.name}</h6>
+                        <small className="text-muted">{testimonial.role}</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-5 bg-primary text-white">
+        <div className="container text-center">
+          <div className="row">
+            <div className="col-lg-8 mx-auto">
+              <h2 className="display-5 fw-bold mb-3">Ready to Start Your Blogging Journey?</h2>
+              <p className="lead mb-4">
+                Join BlogSpace today and start sharing your stories with the world. It's completely free to get started!
+              </p>
+              <div className="d-flex justify-content-center gap-3 flex-wrap">
+                <button 
+                  className="btn btn-light btn-lg px-4 py-2 d-flex align-items-center"
+                  onClick={() => window.location.href = '/signup'}
                 >
-                  <ChevronLeft />
+                  <CheckCircle className="me-2" size={20} />
+                  Start Free Today
                 </button>
-              </li>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <li
-                  key={page}
-                  className={`page-item ${page === currentPage ? "active" : ""}`}
+                <button 
+                  className="btn btn-outline-light btn-lg px-4 py-2"
+                  onClick={() => window.location.href = '/login'}
                 >
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </button>
-                </li>
-              ))}
-
-              <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <ChevronRight />
+                  Already a member? Sign In
                 </button>
-              </li>
-            </ul>
-          </nav>
-        )}
-      </>
-    )}
-  </section>
+              </div>
+              <p className="mt-3 mb-0 small opacity-75">
+                No credit card required • Free forever plan available
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  {/* Stats */}
-  <section className="bg-white py-5">
-    <div className="container text-center">
-      <div className="row g-4">
-        <div className="col-md">
-          <h3 className="text-primary fw-bold">500+</h3>
-          <p className="text-muted">Published Blogs</p>
+      {/* Footer */}
+      <footer className="bg-dark text-white py-4">
+        <div className="container">
+          <div className="row align-items-center">
+            <div className="col-md-6">
+              <div className="d-flex align-items-center">
+                <BookOpen className="me-2 text-primary" size={24} />
+                <span className="fw-bold">BlogSpace</span>
+              </div>
+              <p className="text-muted small mt-2 mb-0">
+                © 2025 BlogSpace. All rights reserved. Empowering writers worldwide.
+              </p>
+            </div>
+            <div className="col-md-6 text-md-end mt-3 mt-md-0">
+              <div className="d-flex justify-content-md-end justify-content-center gap-4">
+                <button 
+                  className="btn btn-link text-white-50 text-decoration-none small p-0 border-0"
+                  onClick={() => console.log('Privacy Policy clicked')}
+                >
+                  Privacy Policy
+                </button>
+                <button 
+                  className="btn btn-link text-white-50 text-decoration-none small p-0 border-0"
+                  onClick={() => console.log('Terms of Service clicked')}
+                >
+                  Terms of Service
+                </button>
+                <button 
+                  className="btn btn-link text-white-50 text-decoration-none small p-0 border-0"
+                  onClick={() => console.log('Contact Us clicked')}
+                >
+                  Contact Us
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="col-md">
-          <h3 className="text-success fw-bold">150+</h3>
-          <p className="text-muted">Active Writers</p>
-        </div>
-        <div className="col-md">
-          <h3 className="text-purple fw-bold">10k+</h3>
-          <p className="text-muted">Monthly Readers</p>
-        </div>
-      </div>
+      </footer>
+
+      <style jsx>{`
+        .hover-card {
+          transition: transform 0.2s ease-in-out;
+        }
+        .hover-card:hover {
+          transform: translateY(-5px);
+        }
+        
+        .bg-gradient-primary {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .card {
+          animation: fadeInUp 0.6s ease-out;
+        }
+      `}</style>
     </div>
-  </section>
-
-  {/* CTA */}
-  <section className="bg-dark text-white py-5 text-center">
-    <div className="container">
-      <h2 className="h3 fw-bold mb-3">Ready to Share Your Story?</h2>
-      <p className="lead text-light mb-4">
-        Join our community of passionate writers and readers. Start your blogging journey today.
-      </p>
-
-      {!user ? (
-        <button
-          onClick={() => setCurrentPage("signup")}
-          className="btn btn-primary btn-lg shadow"
-        >
-          Join BlogSpace Today
-        </button>
-      ) : (
-        <button
-          onClick={() => setCurrentPage("createBlog")}
-          className="btn btn-primary btn-lg shadow d-inline-flex align-items-center"
-        >
-          <BookOpen className="me-2" />
-          Start Writing
-        </button>
-      )}
-    </div>
-  </section>
-</div>
-
   );
 };
 
-export default Home;
+export default Homepage;

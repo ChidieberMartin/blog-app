@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../AuthContext/AuthContext'; // ✅ Import real context
+import { useAuth } from '../../AuthContext/AuthContext';
+import {toast, ToastContainer} from 'react-toastify';
 
 const Login = ({ setCurrentPage }) => {
   const { login } = useAuth(); // ✅ use real login from AuthContext
@@ -54,6 +55,7 @@ const Login = ({ setCurrentPage }) => {
 
       if (result.success) {
         setMessage({ text: 'Login successful! Redirecting...', type: 'success' });
+        toast.success('Login successful! Redirecting...');  
         setTimeout(() => {
           navigate('/home');
         }, 1500);
@@ -80,6 +82,7 @@ const Login = ({ setCurrentPage }) => {
         background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)'
       }}
     >
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-sm-10 col-md-8 col-lg-6 col-xl-4">

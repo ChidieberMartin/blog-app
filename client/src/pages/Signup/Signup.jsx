@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, Loader, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../AuthContext/AuthContext';
 import { Link,useNavigate } from "react-router-dom";
+import {toast, ToastContainer} from 'react-toastify';
 
 const Signup = () => {
   const { signup } = useAuth();
@@ -103,6 +104,7 @@ const Signup = () => {
 
       if (result.success) {
         setSuccessEmail(formData.email);
+        toast.success('Registration successful! Please check your email to verify your account.');
         setFormData({ name: "", email: "", password: "", confirmPassword: "" });
         setMessage({ text: result.message, type: 'success' });
         setRegistrationSuccess(true);
@@ -165,7 +167,7 @@ const Signup = () => {
 
                     <div className="d-grid gap-2">
                       <button
-                         onClick={() => navigate('/')}
+                         onClick={() => navigate('/login')}
                         className="btn btn-primary"
                         disabled={loading}
                       >
@@ -218,13 +220,14 @@ const Signup = () => {
                 Or{' '}
                 <button
                   type="button"
-                   onClick={() => navigate('/')}
+                   onClick={() => navigate('/login')}
                   className="btn btn-link text-primary p-0 fw-medium text-decoration-none"
                 >
                   sign in to your existing account
                 </button>
               </p>
             </div>
+              <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
 
             {/* Main Form Card */}
             <div className="card shadow-lg border-0">
