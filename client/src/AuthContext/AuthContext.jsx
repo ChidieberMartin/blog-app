@@ -1,12 +1,36 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// services/api.js
+// ✅ FIXED Updated API base URL to match your backend port and configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' 
-    ? 'https://blog-app-7u5b.onrender.com/api'
-    : 'http://localhost:4000/api');
+    ? 'https://blog-app-7u5b.onrender.com/api'  // ✅ Your production backend URL
+    : 'http://localhost:4001/api');  // ✅ Fixed port from 4000 to 4001
 
 const AuthContext = createContext();
+
+// ✅ Default fetch configuration with proper CORS handling
+const defaultFetchConfig = {
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  credentials: 'include'  // ✅ Include credentials for CORS
+};
+
+// ✅ Helper function to handle API responses consistently
+const handleResponse = async (response) => {
+  const data = await response.json();
+  
+  if (!response.ok) {
+    console.error('API Error:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: data
+    });
+    throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+  }
+  
+  return data;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -25,13 +49,15 @@ export const AuthProvider = ({ children }) => {
       }
 
       const response = await fetch(`${API_BASE_URL}/users/verify-token`, {
+        ...defaultFetchConfig,
         headers: {
+          ...defaultFetchConfig.headers,
           'Authorization': `Bearer ${token}`
         }
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await handleResponse(response);
         setUser(data.user);
       } else {
         // Token is invalid, clear it
@@ -52,14 +78,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password, rememberMe = false) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/login`, {
+        ...defaultFetchConfig,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ email, password, rememberMe })
       });
 
-      const data = await response.json();
+      const data = await handleResponse(response);
       
       if (data.success) {
         localStorage.setItem('token', data.token);
@@ -75,21 +99,19 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, message: 'Login failed. Please try again.' };
+      return { success: false, message: error.message || 'Login failed. Please try again.' };
     }
   };
 
   const signup = async (name, email, password) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/signup`, {
+        ...defaultFetchConfig,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ name, email, password })
       });
 
-      const data = await response.json();
+      const data = await handleResponse(response);
       
       // Even if signup is successful, don't auto-login until email is verified
       // The backend returns a token but the user should verify email first
@@ -106,15 +128,19 @@ export const AuthProvider = ({ children }) => {
       return data;
     } catch (error) {
       console.error('Signup error:', error);
-      return { success: false, message: 'Registration failed. Please try again.' };
+      return { success: false, message: error.message || 'Registration failed. Please try again.' };
     }
   };
 
-  // New method for email verification
+  // Email verification
   const verifyEmail = async (token) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/verify-email/${token}`);
-      const data = await response.json();
+      const response = await fetch(`${API_BASE_URL}/users/verify-email/${token}`, {
+        ...defaultFetchConfig,
+        method: 'GET'
+      });
+      
+      const data = await handleResponse(response);
       
       if (data.success) {
         // Now set the user and token after successful verification
@@ -127,7 +153,7 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: data.message };
     } catch (error) {
       console.error('Email verification error:', error);
-      return { success: false, message: 'Email verification failed.' };
+      return { success: false, message: error.message || 'Email verification failed.' };
     }
   };
 
@@ -137,10 +163,11 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         // Send logout request to server
         await fetch(`${API_BASE_URL}/users/logout`, {
+          ...defaultFetchConfig,
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            ...defaultFetchConfig.headers,
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({ userId: user?._id })
         });
@@ -158,54 +185,45 @@ export const AuthProvider = ({ children }) => {
   const forgotPassword = async (email) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/forgot-password`, {
+        ...defaultFetchConfig,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ email })
       });
 
-      const data = await response.json();
-      return data;
+      return await handleResponse(response);
     } catch (error) {
       console.error('Forgot password error:', error);
-      return { success: false, message: 'Failed to send reset email' };
+      return { success: false, message: error.message || 'Failed to send reset email' };
     }
   };
 
   const resetPassword = async (token, password) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/reset-password/${token}`, {
+        ...defaultFetchConfig,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ password })
       });
 
-      const data = await response.json();
-      return data;
+      return await handleResponse(response);
     } catch (error) {
       console.error('Reset password error:', error);
-      return { success: false, message: 'Failed to reset password' };
+      return { success: false, message: error.message || 'Failed to reset password' };
     }
   };
 
   const resendVerification = async (email) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/resend-verification`, {
+        ...defaultFetchConfig,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ email })
       });
 
-      const data = await response.json();
-      return data;
+      return await handleResponse(response);
     } catch (error) {
       console.error('Resend verification error:', error);
-      return { success: false, message: 'Failed to resend verification email' };
+      return { success: false, message: error.message || 'Failed to resend verification email' };
     }
   };
 
@@ -213,15 +231,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/users/${user._id}`, {
+        ...defaultFetchConfig,
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          ...defaultFetchConfig.headers,
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(userData)
       });
 
-      const data = await response.json();
+      const data = await handleResponse(response);
       if (data.success) {
         setUser(data.user);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -229,7 +248,7 @@ export const AuthProvider = ({ children }) => {
       return data;
     } catch (error) {
       console.error('Update profile error:', error);
-      return { success: false, message: 'Failed to update profile' };
+      return { success: false, message: error.message || 'Failed to update profile' };
     }
   };
 
@@ -237,19 +256,19 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/users/${user._id}/change-password`, {
+        ...defaultFetchConfig,
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          ...defaultFetchConfig.headers,
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ currentPassword, newPassword })
       });
 
-      const data = await response.json();
-      return data;
+      return await handleResponse(response);
     } catch (error) {
       console.error('Change password error:', error);
-      return { success: false, message: 'Failed to change password' };
+      return { success: false, message: error.message || 'Failed to change password' };
     }
   };
 
@@ -265,7 +284,7 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
     changePassword,
     checkAuthStatus,
-    verifyEmail // Add the new method
+    verifyEmail
   };
 
   return (
@@ -282,3 +301,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// ✅ Export API base URL for debugging
+export { API_BASE_URL };
