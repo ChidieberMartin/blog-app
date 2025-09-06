@@ -1,6 +1,11 @@
 
 // API Base URL - Update this to match your backend
-const API_BASE_URL = 'http://localhost:4000/api';
+
+// services/api.js
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://blog-app-7u5b.onrender.com/api'
+    : 'http://localhost:4000/api');
 
 // Get all blogs with pagination and search
 export const getAllBlogs = async (page = 1, limit = 10, search = '') => {
