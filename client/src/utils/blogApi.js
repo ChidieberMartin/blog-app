@@ -13,6 +13,15 @@ const defaultFetchConfig = {
     credentials: 'include'
 };
 
+// ✅ Helper function to get auth headers
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        ...defaultFetchConfig.headers,
+        'Authorization': token ? `Bearer ${token}` : ''
+    };
+};
+
 // ✅ Helper function to handle API responses
 const handleResponse = async (response) => {
     const data = await response.json();
@@ -42,7 +51,8 @@ export const getAllBlogs = async (page = 1, limit = 10, search = '') => {
 
         const response = await fetch(url, {
             ...defaultFetchConfig,
-            method: 'GET'
+            method: 'GET',
+            headers: getAuthHeaders() // Include auth for user-specific data like isLikedByUser
         });
         
         const data = await handleResponse(response);
@@ -89,7 +99,8 @@ export const getBlogById = async (id) => {
     try {
         const response = await fetch(`${API_BASE_URL}/blogs/${id}`, {
             ...defaultFetchConfig,
-            method: 'GET'
+            method: 'GET',
+            headers: getAuthHeaders() // Include auth for user-specific data
         });
         
         return await handleResponse(response);
@@ -110,10 +121,7 @@ export const createBlog = async (blogData) => {
         const response = await fetch(`${API_BASE_URL}/blogs/create`, {
             ...defaultFetchConfig,
             method: 'POST',
-            headers: {
-                ...defaultFetchConfig.headers,
-                'Authorization': `Bearer ${token}`
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify(blogData)
         });
 
@@ -135,10 +143,7 @@ export const updateBlog = async (id, blogData) => {
         const response = await fetch(`${API_BASE_URL}/blogs/${id}`, {
             ...defaultFetchConfig,
             method: 'PUT',
-            headers: {
-                ...defaultFetchConfig.headers,
-                'Authorization': `Bearer ${token}`
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify(blogData)
         });
 
@@ -160,10 +165,7 @@ export const deleteBlog = async (id) => {
         const response = await fetch(`${API_BASE_URL}/blogs/${id}`, {
             ...defaultFetchConfig,
             method: 'DELETE',
-            headers: {
-                ...defaultFetchConfig.headers,
-                'Authorization': `Bearer ${token}`
-            }
+            headers: getAuthHeaders()
         });
 
         return await handleResponse(response);
@@ -202,6 +204,146 @@ export const searchBlogs = async (searchTerm, page = 1, limit = 10) => {
         return await handleResponse(response);
     } catch (error) {
         console.error('Search blogs error:', error);
+        throw error;
+    }
+}
+
+// ========== SOCIAL FEATURES API FUNCTIONS ==========
+
+// Like/Unlike a blog
+export const toggleLike = async (blogId) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Please login to like blogs');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/like`, {
+            ...defaultFetchConfig,
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Toggle like error:', error);
+        throw error;
+    }
+}
+
+// Get blog likes
+export const getBlogLikes = async (blogId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/likes`, {
+            ...defaultFetchConfig,
+            method: 'GET'
+        });
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Get blog likes error:', error);
+        throw error;
+    }
+}
+
+// Add comment to blog
+export const addComment = async (blogId, text) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Please login to comment');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/comment`, {
+            ...defaultFetchConfig,
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ text })
+        });
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Add comment error:', error);
+        throw error;
+    }
+}
+
+// Get blog comments
+export const getBlogComments = async (blogId, page = 1, limit = 10) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/comments?page=${page}&limit=${limit}`, {
+            ...defaultFetchConfig,
+            method: 'GET'
+        });
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Get blog comments error:', error);
+        throw error;
+    }
+}
+
+// Reply to comment
+export const replyToComment = async (commentId, text) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Please login to reply');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/blogs/comment/${commentId}/reply`, {
+            ...defaultFetchConfig,
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ text })
+        });
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Reply to comment error:', error);
+        throw error;
+    }
+}
+
+// Delete comment
+export const deleteComment = async (commentId) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Please login to delete comments');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/blogs/comment/${commentId}`, {
+            ...defaultFetchConfig,
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Delete comment error:', error);
+        throw error;
+    }
+}
+
+// Share blog
+export const shareBlog = async (blogId, shareMessage = '') => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Please login to share blogs');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/share`, {
+            ...defaultFetchConfig,
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ shareMessage })
+        });
+
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('Share blog error:', error);
         throw error;
     }
 }

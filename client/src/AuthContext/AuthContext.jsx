@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' 
     ? 'https://blog-app-7u5b.onrender.com/api'  // ✅ Your production backend URL
-    : 'http://localhost:4001/api');  // ✅ Fixed port from 4000 to 4001
+    : 'http://localhost:4000/api');  
 
 const AuthContext = createContext();
 
